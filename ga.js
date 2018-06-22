@@ -1,62 +1,65 @@
 // var pop_size = 0;
 function newGeneration(prevPaddles, pop_size){
-    // pop_size = pop_size;
-    // var paddles= [];
-    // var maxfit = evaluate(prevPaddles);
-    // norm(prevPaddles, maxfit);
-    // paddles = selection(prevPaddles);
-    // return paddles;
-    console.log("New gen called");
-     for (var i=0;i<pop_size;i++)
-    {
-        var parentA = random(prevPaddles);
-        var parentB = random(prevPaddles);
-        var child_genes = crossover(parentA, parentB);
-        break;
-    }
-    var temp = [];
-    return temp;
+    var paddles= [];
+    var maxfit = evaluate(prevPaddles,pop_size);
+    norm(prevPaddles, maxfit, pop_size);
+    paddles = selection(prevPaddles, pop_size);
+    return [paddles,maxfit];
 }
 
-function crossover(paddleA, paddleB){
-        var weightsA = paddleA[0].controller.model.getWeights();
-        var weightsB = paddleB[0].controller.model.getWeights();
-        console.log(await weightsA[0].as1D().data());
-        return [];
+function crossover(paddleA, paddleB, m_rate){
+        var weightsA = paddleA.controller.model.getWeights();
+        var weightsB = paddleB.controller.model.getWeights();
+
+        var arr1 =[];
+        var arr2 =[];
+        var child_weights = [];
+        for (var temp in weightsA){
+            arr1[temp] = weightsA[temp].dataSync();
+            arr2[temp] = weightsB[temp].dataSync();
+            var mid = floor(arr1[temp].length /2);
+            if(random(1)<m_rate){
+                child_weights[temp] = arr2[temp];
+
+            }else{
+                child_weights[temp] = arr1[temp];
+            }
+        }
+        return child_weights;
 }
 
-function evaluate(pop_size){
+function evaluate(prevPaddles,pop_size){
     var maxfit =0;
+    // print(prevPaddles);
     for(var i =pop_size ; i>= 0; i--){
-        var fit = paddles[i].fitness;
+        var fit = prevPaddles[i].fitness;
         if(fit>maxfit)
         {
             maxfit =fit;
         }
     }
-    return(maxfit);
-}
-
-function norm(paddles, maxfit, pop_size){
-    for (var i = 0;i<pop_size;i++) {
-        paddles[i].fitness = map(paddles[i].fitness,0, maxfit, 0.0001,1);
+    for (var i =pop_size ; i>= 0; i--) {
+        prevPaddles[i].fitness = prevPaddles[i].fitness / maxfit;
     }
+    return(maxfit);
 }
 
 // Mut rate
 function selection(paddles, pop_size){
-    var new_pop =[];
+    var new_paddles =[];
 
-    for (var i=0;i<pop_size;i++)
+    // for (var i = pop_size ; i>= 0; i--) {
+    //     console.log(paddles[i].fitness);
+    // }
+    for (var i =pop_size;i>=0;i--)
     {
         var parentA = random(paddles);
         var parentB = random(paddles);
         while(true){
             if(random(1)<parentA.fitness && random(1)< parentB.fitness){
-                var child_genes = parentA.crossover(parentB);
-                // var child = new Blob();
-                // child.mutate(m_rate);
-                // new_pop.push(child);
+                var child_genes = crossover(parentA,parentB,0.5);
+                var paddle  = new Paddle(child_genes);
+                new_paddles.push(paddle);
                 break;
             }else{
               parentA = random(this.blobs_pop);
@@ -65,6 +68,6 @@ function selection(paddles, pop_size){
         }
 
     }
-    // console.log(new_pop);
-    this.blobs_pop = new_pop;
+
+    return new_paddles;
 }
