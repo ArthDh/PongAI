@@ -1,12 +1,17 @@
 class Paddle{
-      constructor(){
+      constructor(weights){
             this.h = 10;
             this.w = 100;
             this.pos = createVector(width/2-this.w/2, height-30);
             this.vel = createVector(0,0);
             this.acc = createVector();
             this.color = color(150,0,220,100);
-            this.controller = new Model();
+            if(weights){
+//     -------------TODO--------------
+
+            }else{
+                this.controller = new Model();
+            }
             this.fitness = 0.0001;
       }
 
@@ -38,6 +43,11 @@ class Paddle{
           }
       }
 
+      updatefitness(ball){
+        var d = dist(this.pos.x,this.pos.y, ball.pos.x,ball.pos.y);
+        this.fitness+= 1/d;
+      }
+
       think(ball){
         var inputs = [];
         inputs[0] = this.pos.x/width;
@@ -53,8 +63,12 @@ class Paddle{
         else{
           this.pos.x -=10;
         }
+
+        this.updatefitness(ball);
+
         tf_inputs.dispose();
       }
+
 
 
 }
