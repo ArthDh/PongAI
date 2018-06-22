@@ -27,7 +27,7 @@ class Ball{
             this.pos = createVector(width/2, height/2);
             this.vel = createVector(0,-5);
             this.applyForce(-0.5);
-            console.log("HIT");
+            // console.log("HIT");
             this.score= this.score+1;
 
         }
@@ -62,11 +62,13 @@ class Ball{
 
       hitPaddle(paddle){
           if(this.pos.x>paddle.pos.x && this.pos.x<paddle.pos.x+paddle.w && this.pos.y>paddle.pos.y-this.r/2 && this.pos.y< paddle.pos.y + paddle.h){
+            paddle.fitness +=1;
             return true;
         }
         return false;
       }
       belowPaddle(paddle){
+          // console.log(paddle);
           if(this.pos.y>paddle.pos.y+paddle.h){
             return true;
         }
