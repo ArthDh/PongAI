@@ -1,73 +1,89 @@
 // var pop_size = 0;
+var pool;
 function newGeneration(prevPaddles, pop_size){
     var paddles= [];
     var maxfit = evaluate(prevPaddles,pop_size);
-    norm(prevPaddles, maxfit, pop_size);
     paddles = selection(prevPaddles, pop_size);
+    flag =1;
     return [paddles,maxfit];
+
 }
 
-function crossover(paddleA, paddleB, m_rate){
+function duplicate(paddleA, m_rate){
         var weightsA = paddleA.controller.model.getWeights();
-        var weightsB = paddleB.controller.model.getWeights();
-
+        // paddles[0].controller.model.layers[1].setWeights(paddles[1].controller.model.layers[1].getWeights());
         var arr1 =[];
-        var arr2 =[];
         var child_weights = [];
         for (var temp in weightsA){
             arr1[temp] = weightsA[temp].dataSync();
-            arr2[temp] = weightsB[temp].dataSync();
-            var mid = floor(arr1[temp].length /2);
-            if(random(1)<m_rate){
-                child_weights[temp] = arr2[temp];
-
-            }else{
-                child_weights[temp] = arr1[temp];
+            // ------
+            for (var i = arr1[temp].length-1; i >= 0; i--) {
+                if(random(1)< m_rate){
+                    arr1[temp][i] =random(-1,1);
+                }
             }
+            //  ------
+            var mid = floor(arr1[temp].length /2);
+
+            tf.tidy(() => {
+                if(temp ==0){
+                child_weights.push(tf.tensor(arr1[temp]).reshape([3,3]));
+            }
+            else if(temp ==2){
+                child_weights.push(tf.tensor(arr1[temp]).reshape([3,5]));
+            }
+            else if(temp ==4){
+                child_weights.push(tf.tensor(arr1[temp]).reshape([5,1]));
+            }
+            else{
+                child_weights.push(tf.tensor(arr1[temp]));
+            }
+            });
+
+
         }
+        // console.log(child_weights);
         return child_weights;
 }
 
 function evaluate(prevPaddles,pop_size){
     var maxfit =0;
-    // print(prevPaddles);
-    for(var i =pop_size ; i>= 0; i--){
-        var fit = prevPaddles[i].fitness;
+    for(var i in prevPaddles){
+        var fit = 2*prevPaddles[i].score+ 1.5*(prevPaddles[i].fitness);
         if(fit>maxfit)
         {
             maxfit =fit;
         }
     }
-    for (var i =pop_size ; i>= 0; i--) {
-        prevPaddles[i].fitness = prevPaddles[i].fitness / maxfit;
+    for (var i in prevPaddles) {
+        prevPaddles[i].score =(2*prevPaddles[i].score+1.5*prevPaddles[i].fitness)/ maxfit;
+
     }
     return(maxfit);
 }
 
-// Mut rate
 function selection(paddles, pop_size){
     var new_paddles =[];
-
-    // for (var i = pop_size ; i>= 0; i--) {
-    //     console.log(paddles[i].fitness);
-    // }
-    for (var i =pop_size;i>=0;i--)
-    {
-        var parentA = random(paddles);
-        var parentB = random(paddles);
-        while(true){
-            if(random(1)<parentA.fitness && random(1)< parentB.fitness){
-                var child_genes = crossover(parentA,parentB,0.5);
-                var paddle  = new Paddle(child_genes);
-                new_paddles.push(paddle);
-                break;
-            }else{
-              parentA = random(this.blobs_pop);
-              parentB = random(this.blobs_pop);
-            }
+    pool = [];
+    for(var temp in paddles){
+        for(var i=0; i<ceil(paddles[temp].score*15);i++)
+        {
+            pool.push(paddles[temp]);
         }
-
     }
 
+    for (var i =pop_size-1;i>=0;i--)
+    {
+
+        var parentA = random(pool);
+        child_genes =[];
+        // console.log(parentA);
+        var child_genes = duplicate(parentA,0.2);
+        var paddle  = new Paddle();
+        // console.log(child_genes);
+        paddle.setWeights(child_genes,parentA);
+        new_paddles.push(paddle);
+    }
+    // console.log(new_paddles.length);
     return new_paddles;
 }
