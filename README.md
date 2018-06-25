@@ -10,6 +10,7 @@
 # TODO
 - [] Fix crossover functionality
 - [] Fix Pong collision bug
+- [] Fix memory leaks
 
 ## Acknowledgments
 
