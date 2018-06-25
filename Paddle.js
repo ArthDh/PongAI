@@ -6,13 +6,10 @@ class Paddle{
             this.vel = createVector(0,0);
             this.acc = createVector();
             this.color = color(150,0,220,100);
-            if(weights){
-//     -------------TODO--------------
-
-            }else{
-                this.controller = new Model();
-            }
-            this.fitness = 0.0001;
+            this.controller = new Model();
+            this.fitness = 0;
+            this.score =0;
+            this.prev_pos =createVector(width/2-this.w/2, height-30);
       }
 
 
@@ -37,15 +34,15 @@ class Paddle{
       }
       keyPressed(){
           if (keyCode === LEFT_ARROW && keyIsPressed) {
-              paddle.pos.x -=10;
+              this.pos.x -=10;
           } else if (keyCode === RIGHT_ARROW && keyIsPressed) {
-              paddle.pos.x +=10;
+              this.pos.x +=10;
           }
       }
 
       updatefitness(ball){
         var d = dist(this.pos.x,this.pos.y, ball.pos.x,ball.pos.y);
-        this.fitness+= 1/d;
+        this.fitness = 1/(d+0.5);
       }
 
       think(ball){
@@ -54,6 +51,7 @@ class Paddle{
         inputs[1] = ball.pos.x/width;
         inputs[2] = ball.pos.y/height;
 
+        tf.tidy(() => {
         var tf_inputs = tf.tensor2d(inputs,[1,3]);
         let pred = this.controller.model.predict(tf_inputs);
         // console.log();
@@ -63,13 +61,24 @@ class Paddle{
         else{
           this.pos.x -=10;
         }
-
         this.updatefitness(ball);
+        });
 
-        tf_inputs.dispose();
+
       }
 
+      setWeights(weights,parentA){
+        tf.tidy(() => {
+        this.controller.model.setWeights(weights);
+        });
+      }
 
+      idle(){
+        if(this.pos.x==this.prev_pos.x){
+          return true;
+        }
+        return false;
+      }
 
 }
 
